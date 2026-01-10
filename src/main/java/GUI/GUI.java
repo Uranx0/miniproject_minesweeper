@@ -235,40 +235,36 @@ public class GUI extends JFrame {
     //TODO
     // Show highscore window
     private void showHighscores(int amount) {
-        // 1. Get the list (Use Generics <Score>)
         List<Score> topScores = highScoreManager.getTopScores(amount);
 
-        // 2. Prepare Data for JTable
+        // Preparing Data for JTable
         String[] columnNames = {"Rank", "Name", "Time (s)"};
         Object[][] data = new Object[amount][3];
 
         for (int i = 0; i < amount; i++) {
-            // Always set the Rank
             data[i][0] = i + 1;
 
-            // SAFETY CHECK: Ensure we don't go out of bounds if list is small
             if (i < topScores.size()) {
-                Score s = topScores.get(i); // FIXED: Added (i)
+                Score s = topScores.get(i);
                 data[i][1] = s.getPlayerName();
-                data[i][2] = s.getTimeInSeconds(); // Or s.getValue()
+                data[i][2] = s.getTimeInSeconds();
             } else {
-                // Optional: Handle empty rows explicitly
-                data[i][1] = "---";
+                // Handling empty rows
+                data[i][1] = "-----";
                 data[i][2] = "--";
             }
         }
 
-        // 3. Create JTable
         JTable table = new JTable(data, columnNames);
         table.setEnabled(false);
 
-        // Formatting: Center text
+        // Formatting (center text)
         DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
         centerRenderer.setHorizontalAlignment(JLabel.CENTER);
         table.getColumnModel().getColumn(0).setCellRenderer(centerRenderer);
         table.getColumnModel().getColumn(2).setCellRenderer(centerRenderer);
 
-        // 4. Wrap in ScrollPane & Show
+        // ScrollPane to put the table in
         JScrollPane scrollPane = new JScrollPane(table);
         scrollPane.setPreferredSize(new Dimension(350, 200));
 
