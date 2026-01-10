@@ -11,13 +11,15 @@ import static org.junit.jupiter.api.Assertions.*;
 public class BoardTest {
     @Test
     void testMineCount() {
-        int size = 10;
+        int rows = 10;
+        int cols = 10;
         int mineAmount = 15;
-        Board board = new Board(size, mineAmount);
+        Board board = new Board(rows, cols, mineAmount);
+        board.initializeBoard(0,0);
 
         int actualMines = 0;
-        for (int i = 0; i < size; i++) {
-            for (int j = 0; j < size; j++) {
+        for (int i = 0; i < rows; i++) {
+            for (int j = 0; j < cols; j++) {
                 if (board.getFieldAt(i, j).isMine()) {
                     actualMines++;
                 }
@@ -29,17 +31,19 @@ public class BoardTest {
 
     @Test
     void testInvalidConfiguration() {
-        int size = 5;
+        int rows = 5;
+        int cols = 5;
         int tooManyMines = 26;
 
         assertThrows(InvalidGameConfigurationException.class, () -> {
-            new Board(size, tooManyMines);
+            new Board(rows, cols, tooManyMines);
         }, "Constructor should throw exception if mines count is greater than board size.");
     }
 
     @Test
     void testToggleFlag() {
-        Board board = new Board(10, 5);
+        Board board = new Board(10, 10, 5);
+        board.initializeBoard(0,0);
         int x = 0;
         int y = 0;
 
@@ -57,12 +61,16 @@ public class BoardTest {
 
     @Test
     void testRevealingMineThrowsException() {
-        Board board = new Board(10, 20);
+        int rows = 5;
+        int cols = 5;
+        Board board = new Board(rows, cols, 10);
+        board.initializeBoard(0,0);
+
         Point mineLocation = null;
 
         // Finding a location with a mine
-        for (int i = 0; i < 10; i++) {
-            for (int j = 0; j < 10; j++) {
+        for (int i = 0; i < rows; i++) {
+            for (int j = 0; j < cols; j++) {
                 if (board.getFieldAt(i, j).isMine()) {
                     mineLocation = new Point(i, j);
                     break;

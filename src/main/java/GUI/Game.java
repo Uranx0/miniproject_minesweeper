@@ -12,30 +12,34 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.List;
 
-public class GUI extends JFrame {
+public class Game extends JFrame {
 
     private final JButton[][] buttons;
     private Board board;
-    private final int size;
+    private final int rows;
+    private final int columns;
     private final int mineAmount;
     private final GameTimer gameTimer;
     private JPanel buttonsPanel;
     private boolean firstClick = true;
     private final HighScoreManager highScoreManager;
     private final int highScoreEntryAmount;
+    private final int windowScale;
 
-    public GUI(int size, int mineAmount, int highScoreEntryAmount) {
-        this.size = size;
+    public Game(int rows, int columns, int mineAmount) {
+        this.rows = rows;
+        this.columns = columns;
         this.mineAmount = mineAmount;
-        this.highScoreEntryAmount = highScoreEntryAmount;
-        this.board = new Board(size, mineAmount);
-        this.buttons = new JButton[size][size];
+        this.highScoreEntryAmount = 10;
+        this.board = new Board(rows, columns, mineAmount);
+        this.buttons = new JButton[rows][columns];
 
         this.highScoreManager = new HighScoreManager(1000);
 
         // Window setup
         setTitle("Minesweeper");
-        setSize(600, 700);
+        this.windowScale = 50;
+        setSize(columns*windowScale, (rows)*windowScale+100);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLayout(new BorderLayout());
 
@@ -82,14 +86,14 @@ public class GUI extends JFrame {
     // Create buttons label
     private JPanel createButtonsPanel() {
         JPanel panel = new JPanel();
-        panel.setLayout(new GridLayout(size, size));
+        panel.setLayout(new GridLayout(rows, columns));
 
-        for (int i = 0; i < size; i++) {
-            for (int j = 0; j < size; j++) {
+        for (int i = 0; i < rows; i++) {
+            for (int j = 0; j < columns; j++) {
 
                 // Button visuals
                 JButton button = new JButton();
-                button.setFont(new Font("Segoe UI Emoji", Font.PLAIN, 20));
+                button.setFont(new Font("Segoe UI Emoji", Font.PLAIN, windowScale/5));
                 button.setFocusPainted(false);
 
                 buttons[i][j] = button;
@@ -177,7 +181,7 @@ public class GUI extends JFrame {
     // Resetting the game
     private void resetGame() {
         firstClick = true;
-        this.board = new Board(size, mineAmount);
+        this.board = new Board(rows, columns, mineAmount);
         this.gameTimer.reset();
 
         remove(buttonsPanel);
@@ -190,8 +194,8 @@ public class GUI extends JFrame {
 
     // Refreshing the button label
     private void refreshView() {
-        for (int i = 0; i < size; i++) {
-            for (int j = 0; j < size; j++) {
+        for (int i = 0; i < rows; i++) {
+            for (int j = 0; j < columns; j++) {
                 JButton btn = buttons[i][j];
                 String symbol = board.getFieldAt(i, j).getDisplaySymbol();
                 btn.setText(symbol);
@@ -213,8 +217,8 @@ public class GUI extends JFrame {
 
     // Reveal all mines on button label
     private void revealAllMines() {
-        for (int i = 0; i < size; i++) {
-            for (int j = 0; j < size; j++) {
+        for (int i = 0; i < rows; i++) {
+            for (int j = 0; j < columns; j++) {
                 // Show all mines
                 if (board.getFieldAt(i, j).isMine()) {
                     buttons[i][j].setText("💣");
@@ -232,7 +236,6 @@ public class GUI extends JFrame {
         }
     }
 
-    //TODO
     // Show highscore window
     private void showHighscores(int amount) {
         List<Score> topScores = highScoreManager.getTopScores(amount);

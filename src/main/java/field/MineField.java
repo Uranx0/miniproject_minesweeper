@@ -16,6 +16,6 @@ public class MineField extends Field {
 //        return isRevealed() ? "💣" : (isFlagged() ? "🚩" : "");
 
         // Cheat version for testing bellow
-        return isRevealed() ? "💣" : (isFlagged() ? "🚩 💣" : "");
+        return isRevealed() ? "💣" : (isFlagged() ? "💣" : "");
     }
 }

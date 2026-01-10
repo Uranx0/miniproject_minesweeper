@@ -15,14 +15,16 @@ import java.util.Random;
 public class Board {
     //Map with board state
     private final Map<Point, Field> grid = new HashMap<>();
-    private final int size;
+    private final int rows;
+    private final int columns;
     private final int mineAmount;
 
-    public Board(int size, int mineAmount) {
-        if (size < 5 || mineAmount >= size * size) {
+    public Board(int rows, int columns, int mineAmount) {
+        if (rows < 5 || columns < 5 || mineAmount >= rows * columns) {
             throw new InvalidGameConfigurationException("Invalid size or mineAmount");
         }
-        this.size = size;
+        this.rows = rows;
+        this.columns = columns;
         this.mineAmount = mineAmount;
         initializeEmptyBoard();
     }
@@ -33,8 +35,8 @@ public class Board {
         grid.clear();
 
         // Filling the grid with SafeField
-        for (int i = 0; i < size; i++) {
-            for (int j = 0; j < size; j++) {
+        for (int i = 0; i < rows; i++) {
+            for (int j = 0; j < columns; j++) {
                 grid.put(new Point(i, j), new SafeField());
             }
         }
@@ -52,8 +54,8 @@ public class Board {
         int mineCount = 0;
         while (mineCount != mineAmount) {
             Random rng = new Random();
-            int x = rng.nextInt(size);
-            int y = rng.nextInt(size);
+            int x = rng.nextInt(rows);
+            int y = rng.nextInt(columns);
 
             if (!mines.contains(new Point(x, y))) {
                 mines.add(new Point(x, y));
@@ -64,13 +66,12 @@ public class Board {
         }
 
         // Counting neighborMines for all SafeField's
-
         // Arrays with shifts for all 8 possible neighbors
         int[] dx = {-1, -1, -1, 0, 0, 1, 1, 1};
         int[] dy = {-1, 0, 1, -1, 1, -1, 0, 1};
 
-        for (int i = 0; i < size; i++) {
-            for (int j = 0; j < size; j++) {
+        for (int i = 0; i < rows; i++) {
+            for (int j = 0; j < columns; j++) {
                 Point currentPoint = new Point(i, j);
                 Field currentField = grid.get(currentPoint);
 
@@ -82,7 +83,7 @@ public class Board {
                         int ny = j + dy[k]; // neighbor y
 
                         // Check if the neighbor isn't outside the Board
-                        if (nx >= 0 && nx < size && ny >= 0 && ny < size) {
+                        if (nx >= 0 && nx < rows && ny >= 0 && ny < columns) {
                             Field neighbor = grid.get(new Point(nx, ny));
 
                             if (neighbor.isMine()) count++;
@@ -121,7 +122,7 @@ public class Board {
                 int ny = y + dy[i]; // neighbor y
 
                 // Check if the neighbor isn't outside the Board
-                if (nx >= 0 && nx < size && ny >= 0 && ny < size) {
+                if (nx >= 0 && nx < rows && ny >= 0 && ny < columns) {
                     if (!grid.get(new Point(nx, ny)).isRevealed()) {
                         this.revealCell(nx, ny);
                     }
@@ -142,15 +143,15 @@ public class Board {
     public boolean checkWin() {
         int count = 0;
 
-        for (int i = 0; i < size; i++) {
-            for (int j = 0; j < size; j++) {
+        for (int i = 0; i < rows; i++) {
+            for (int j = 0; j < columns; j++) {
                 if (grid.get(new Point(i, j)).isRevealed()) {
                     count++;
                 }
             }
         }
 
-        return count == size * size - mineAmount;
+        return count == rows * columns - mineAmount;
     }
 
     public Field getFieldAt(int x, int y) {
