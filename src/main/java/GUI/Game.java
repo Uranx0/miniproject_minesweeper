@@ -14,17 +14,16 @@ import java.util.List;
 
 public class Game extends JFrame {
 
-    private final JButton[][] buttons;
-    private Board board;
     private final int rows;
     private final int columns;
     private final int mineAmount;
+    private final int highScoreEntryAmount;
+    private Board board;
+    private final JButton[][] buttons;
+    private final HighScoreManager highScoreManager;
     private final GameTimer gameTimer;
     private JPanel buttonsPanel;
     private boolean firstClick = true;
-    private final HighScoreManager highScoreManager;
-    private final int highScoreEntryAmount;
-    private final int windowScale;
 
     public Game(int rows, int columns, int mineAmount) {
         this.rows = rows;
@@ -38,8 +37,8 @@ public class Game extends JFrame {
 
         // Window setup
         setTitle("Minesweeper");
-        this.windowScale = 50;
-        setSize(columns*windowScale, (rows)*windowScale+100);
+        int windowScale = 50;
+        setSize(columns * windowScale, (rows) * windowScale + 100);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLayout(new BorderLayout());
 
@@ -55,6 +54,8 @@ public class Game extends JFrame {
         this.buttonsPanel = createButtonsPanel();
         add(buttonsPanel, BorderLayout.CENTER);
 
+        setLocationRelativeTo(null);
+        setResizable(false);
         setVisible(true);
     }
 
@@ -65,15 +66,19 @@ public class Game extends JFrame {
         JMenu gameMenu = new JMenu("Menu");
 
         JMenuItem newGameItem = new JMenuItem("New Game");
-        newGameItem.addActionListener(e -> resetGame());
+        newGameItem.addActionListener(e -> newGame());
 
-        JMenuItem highScoresItem = new JMenuItem("High Scores");
-        highScoresItem.addActionListener(e -> showHighscores(highScoreEntryAmount));
+        JMenuItem resetGameItem = new JMenuItem("Reset Game");
+        resetGameItem.addActionListener(e -> resetGame());
 
         JMenuItem exitItem = new JMenuItem("Exit");
         exitItem.addActionListener(e -> System.exit(0));
 
+        JMenuItem highScoresItem = new JMenuItem("High Scores");
+        highScoresItem.addActionListener(e -> showHighscores(highScoreEntryAmount));
+
         gameMenu.add(newGameItem);
+        gameMenu.add(resetGameItem);
         gameMenu.addSeparator();
         gameMenu.add(exitItem);
 
@@ -93,7 +98,7 @@ public class Game extends JFrame {
 
                 // Button visuals
                 JButton button = new JButton();
-                button.setFont(new Font("Segoe UI Emoji", Font.PLAIN, windowScale/5));
+                button.setFont(new Font("Segoe UI Emoji", Font.PLAIN, 10));
                 button.setFocusPainted(false);
 
                 buttons[i][j] = button;
@@ -190,6 +195,11 @@ public class Game extends JFrame {
 
         revalidate();
         repaint();
+    }
+
+    private void newGame() {
+        this.dispose();
+        new GameSetup();
     }
 
     // Refreshing the button label
