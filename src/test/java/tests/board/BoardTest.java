@@ -15,7 +15,7 @@ public class BoardTest {
         int cols = 10;
         int mineAmount = 15;
         Board board = new Board(rows, cols, mineAmount);
-        board.initializeBoard(0,0);
+        board.initializeBoard(0, 0);
 
         int actualMines = 0;
         for (int i = 0; i < rows; i++) {
@@ -35,15 +35,17 @@ public class BoardTest {
         int cols = 5;
         int tooManyMines = 26;
 
-        assertThrows(InvalidGameConfigurationException.class, () -> {
-            new Board(rows, cols, tooManyMines);
-        }, "Constructor should throw exception if mines count is greater than board size.");
+        assertThrows(
+                InvalidGameConfigurationException.class,
+                () -> new Board(rows, cols, tooManyMines),
+                "Constructor should throw exception if mines count is greater than board size."
+        );
     }
 
     @Test
     void testToggleFlag() {
         Board board = new Board(10, 10, 5);
-        board.initializeBoard(0,0);
+        board.initializeBoard(0, 0);
         int x = 0;
         int y = 0;
 
@@ -64,7 +66,7 @@ public class BoardTest {
         int rows = 5;
         int cols = 5;
         Board board = new Board(rows, cols, 10);
-        board.initializeBoard(0,0);
+        board.initializeBoard(0, 0);
 
         Point mineLocation = null;
 
@@ -82,8 +84,10 @@ public class BoardTest {
         assertNotNull(mineLocation, "Board should contain at least one mine.");
 
         Point finalMineLocation = mineLocation;
-        assertThrows(GameOverException.class, () -> {
-            board.revealCell(finalMineLocation.x, finalMineLocation.y);
-        }, "Revealing a mine should throw GameOverException.");
+        assertThrows(
+                GameOverException.class,
+                () -> board.revealCell(finalMineLocation.x, finalMineLocation.y),
+                "Revealing a mine should throw GameOverException."
+        );
     }
 }
