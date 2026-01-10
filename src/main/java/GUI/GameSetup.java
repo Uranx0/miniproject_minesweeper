@@ -42,11 +42,11 @@ public class GameSetup extends JFrame {
 
         // Custom input panel
         JPanel customPanel = new JPanel(new FlowLayout());
-        customPanel.setBorder(BorderFactory.createTitledBorder("Custom Settings"));
+        customPanel.setBorder(BorderFactory.createTitledBorder("Custom Settings  [min 5,5,1]  [max 16,30,99]"));
 
-        rowSpinner = createSpinner(9, 5, 50);  // Default 9, Min 5, Max 50
-        colSpinner = createSpinner(9, 5, 50);
-        mineSpinner = createSpinner(10, 1, 500);
+        rowSpinner = createSpinner(9, 5, 16);
+        colSpinner = createSpinner(9, 5, 30);
+        mineSpinner = createSpinner(10, 1, 99);
 
         customPanel.add(new JLabel("Rows:"));
         customPanel.add(rowSpinner);
@@ -83,9 +83,7 @@ public class GameSetup extends JFrame {
         // Auto-size window
         pack();
 
-        // Center on screen
         setLocationRelativeTo(null);
-
         setVisible(true);
     }
 
@@ -128,8 +126,6 @@ public class GameSetup extends JFrame {
         if (m >= r * c) {
             JOptionPane.showMessageDialog(this, "Too many mines for board size");
         }
-
-        System.out.println("[LOG] Starting game: " + r + "x" + c + " with " + m + " mines");
 
         this.dispose();
         new Game(r, c, m);
