@@ -105,14 +105,60 @@ public class Board {
         return count;
     }
 
+    private int countFlagsAround(int x, int y) {
+        int count = 0;
+        for (int i = 0; i < 8; i++) {
+            int nx = x + DX[i];
+            int ny = y + DY[i];
+            if (isValid(nx, ny) && grid[nx][ny].isFlagged()) {
+                count++;
+            }
+        }
+        return count;
+    }
+
+    // Check everything around the Cell is revealed or flagged
+    public boolean isEnabled(int x, int y) {
+        int neighbors = 0;
+        int revealedOrFlagged = 0;
+        for (int i = 0; i < 8; i++) {
+            int nx = x + DX[i];
+            int ny = y + DY[i];
+            if (isValid(nx, ny)) {
+                neighbors++;
+                if ((grid[nx][ny].isRevealed() || grid[nx][ny].isFlagged())) {
+                    revealedOrFlagged++;
+                }
+            }
+        }
+        return !(grid[x][y].isRevealed() && neighbors == revealedOrFlagged);
+    }
+
     // Cell reveal logic
     public void revealCell(int x, int y) {
         if (!isValid(x, y)) return;
 
         Field field = grid[x][y];
 
-        // Stop if already revealed
-        if (field.isRevealed()) return;
+        if (field.isRevealed()) {
+            if (countFlagsAround(x, y) == countMinesAround(x, y)) {
+                for (int i = 0; i < 8; i++) {
+                    int nx = x + DX[i];
+                    int ny = y + DY[i];
+
+                    // Reveal neighbors that are hidden and unflagged
+                    if (isValid(nx, ny)) {
+                        Field neighbor = grid[nx][ny];
+                        if (!neighbor.isRevealed() && !neighbor.isFlagged()) {
+                            revealCell(nx, ny);
+                        }
+                    }
+                }
+            }
+            return;
+        }
+
+        if (field.isFlagged()) return;
 
         field.reveal();
 
@@ -125,7 +171,13 @@ public class Board {
         // Revealing neighbors automatically if Cell has 0 neighborMines
         if (field instanceof SafeField && ((SafeField) field).getNeighborMines() == 0) {
             for (int i = 0; i < 8; i++) {
-                revealCell(x + DX[i], y + DY[i]);
+                int nx = x + DX[i];
+                int ny = y + DY[i];
+
+                // SAFETY CHECK: Only recurse on hidden cells
+                if (isValid(nx, ny) && !grid[nx][ny].isRevealed()) {
+                    revealCell(nx, ny);
+                }
             }
         }
     }

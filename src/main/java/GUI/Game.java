@@ -186,7 +186,7 @@ public class Game extends JFrame {
         for (int i = 0; i < rows; i++) {
             for (int j = 0; j < columns; j++) {
                 buttons[i][j].setEnabled(false);
-                buttons[i][j].setUI(DISABLED_UI);
+//                buttons[i][j].setUI(DISABLED_UI);
             }
         }
 
@@ -255,23 +255,38 @@ public class Game extends JFrame {
             for (int j = 0; j < columns; j++) {
                 JButton btn = buttons[i][j];
                 String symbol = board.getFieldAt(i, j).getDisplaySymbol();
+                boolean isRevealed = board.getFieldAt(i, j).isRevealed();
+
                 btn.setText(symbol);
 
                 if (symbol.equals("🚩")) {
                     flagsPlaced++;
-                }
+                    styleButton(btn, false);
+                } else styleButton(btn, isRevealed);
 
-                // Disable reveled buttons
-                if (board.getFieldAt(i, j).isRevealed()) {
-                    btn.setEnabled(false);
-                    btn.setUI(DISABLED_UI); // Use reused UI
-                }
+                // Disable buttons when everything around them is revealed or flagged
+                btn.setEnabled(board.isEnabled(i, j));
             }
         }
-
         // Updating the mine count label
         int remaining = mineAmount - flagsPlaced;
         mineLabel.setText("Mines: " + remaining);
+    }
+
+    //TODO check
+    // 2. NEW HELPER METHOD FOR STYLING
+    private void styleButton(JButton btn, boolean isRevealed) {
+        if (isRevealed) {
+            // "Flat" Look (Simulating Disabled)
+            btn.setBackground(Color.LIGHT_GRAY);
+            btn.setBorder(BorderFactory.createLineBorder(Color.GRAY)); // Simple flat border
+            btn.setRolloverEnabled(false); // Disable the hover "glow" effect
+        } else {
+            // "Raised" Look (Normal Button)
+            btn.setBackground(null); // Reset to default
+            btn.setBorder(UIManager.getBorder("Button.border")); // Reset 3D border
+            btn.setRolloverEnabled(true);
+        }
     }
 
     // Reveal all mines on button label
@@ -282,7 +297,11 @@ public class Game extends JFrame {
                 if (board.getFieldAt(i, j).isMine()) {
                     buttons[i][j].setText("💣");
                     buttons[i][j].setBackground(Color.RED);
-                    buttons[i][j].setUI(DISABLED_UI);
+
+                    //TODO make it look better
+//                    buttons[i][j].setUI(DISABLED_UI);
+                } else {
+                    styleButton(buttons[i][j], true);
                 }
                 buttons[i][j].setEnabled(false);
             }
