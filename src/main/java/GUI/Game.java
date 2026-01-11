@@ -46,6 +46,11 @@ public class Game extends JFrame {
         }
 
         @Override
+        protected Color getSelectColor() {
+            return BG_DARK;
+        }
+
+        @Override
         public void paint(Graphics g, JComponent c) {
             AbstractButton b = (AbstractButton) c;
             if (b.getForeground() != null) {
