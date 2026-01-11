@@ -7,6 +7,7 @@ import score.HighScoreManager;
 import score.Score;
 
 import javax.swing.*;
+import javax.swing.plaf.metal.MetalButtonUI;
 import javax.swing.table.DefaultTableCellRenderer;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
@@ -19,14 +20,24 @@ public class Game extends JFrame {
     private final int columns;
     private final int mineAmount;
     private final int highScoreEntryAmount;
+
     private Board board;
     private final JButton[][] buttons;
     private final HighScoreManager highScoreManager;
     private final GameTimer gameTimer;
+
     private JPanel buttonsPanel;
+    private final JLabel mineLabel;
+
     private boolean firstClick = true;
     private final boolean practice;
     private final Difficulty difficulty;
+
+    private final static MetalButtonUI DISABLED_UI = new MetalButtonUI() {
+        protected Color getDisabledTextColor() {
+            return Color.BLACK;
+        }
+    };
 
     public Game(int rows, int columns, int mineAmount, boolean practice, Difficulty difficulty) {
         this.rows = rows;
@@ -43,19 +54,34 @@ public class Game extends JFrame {
         // Window setup
         setTitle("Minesweeper");
         int windowScale = 50;
-        setSize(columns * windowScale, (rows) * windowScale + 100);
+        setSize(columns * windowScale, rows * windowScale + 80);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLayout(new BorderLayout());
 
         // Menu bar
         setJMenuBar(createMenuBar());
 
-        // Game timer
-        JLabel timeLabel = new JLabel();
-        this.gameTimer = new GameTimer(timeLabel);
-        add(timeLabel, BorderLayout.NORTH);
+        // Header panel (timer + mine counter)
+        JPanel headerPanel = new JPanel(new BorderLayout());
+        headerPanel.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
+        headerPanel.setBackground(Color.LIGHT_GRAY);
 
-        // Button board
+        // Mine counter (left)
+        mineLabel = new JLabel("Mines: " + mineAmount);
+        mineLabel.setFont(new Font("Segoe UI", Font.BOLD, 20));
+        mineLabel.setHorizontalAlignment(SwingConstants.LEFT);
+
+        // Game timer (right)
+        JLabel timeLabel = new JLabel("Time: 0s");
+        this.gameTimer = new GameTimer(timeLabel);
+
+        headerPanel.add(mineLabel, BorderLayout.WEST);
+        headerPanel.add(timeLabel, BorderLayout.EAST);
+
+        add(headerPanel, BorderLayout.NORTH);
+        // -------------------------------------------
+
+        // Buttons panel
         this.buttonsPanel = createButtonsPanel();
         add(buttonsPanel, BorderLayout.CENTER);
 
@@ -103,9 +129,8 @@ public class Game extends JFrame {
 
                 // Button visuals
                 JButton button = new JButton();
-                if (rows > 6 && columns > 6) {
-                    button.setFont(new Font("Segoe UI Emoji", Font.PLAIN, 10));
-                } else button.setFont(new Font("Segoe UI Emoji", Font.PLAIN, 9));
+                int fontSize = (rows > 6 && columns > 6) ? 10 : 9;
+                button.setFont(new Font("Segoe UI Emoji", Font.PLAIN, fontSize));
                 button.setFocusPainted(false);
 
                 buttons[i][j] = button;
@@ -120,7 +145,7 @@ public class Game extends JFrame {
                 button.addMouseListener(new MouseAdapter() {
                     @Override
                     public void mousePressed(MouseEvent e) {
-                        if (SwingUtilities.isRightMouseButton(e) && buttons[finalI][finalJ].isEnabled()) {
+                        if (SwingUtilities.isRightMouseButton(e) && buttons[finalI][finalJ].isEnabled() && !firstClick) {
                             board.toggleFlagCell(finalI, finalJ);
                             refreshView();
                         }
@@ -161,13 +186,7 @@ public class Game extends JFrame {
         for (int i = 0; i < rows; i++) {
             for (int j = 0; j < columns; j++) {
                 buttons[i][j].setEnabled(false);
-
-                // Color change to disabled buttons for visibility
-                buttons[i][j].setUI(new javax.swing.plaf.metal.MetalButtonUI() {
-                    protected Color getDisabledTextColor() {
-                        return Color.BLACK;
-                    }
-                });
+                buttons[i][j].setUI(DISABLED_UI);
             }
         }
 
@@ -181,14 +200,9 @@ public class Game extends JFrame {
                 highScoreManager.addScore(name, gameTimer.getTimeInSeconds());
                 showHighscores(highScoreEntryAmount);
             }
-
         } else {
-            JOptionPane.showMessageDialog(
-                    this,
-                    "You win!\nTime: " + gameTimer.getTimeInSeconds()
-            );
+            JOptionPane.showMessageDialog(this, "You win!\nTime: " + gameTimer.getTimeInSeconds());
         }
-
     }
 
     // Handling game over state
@@ -218,6 +232,8 @@ public class Game extends JFrame {
         this.board = new Board(rows, columns, mineAmount);
         this.gameTimer.reset();
 
+        mineLabel.setText("Mines: " + mineAmount);
+
         remove(buttonsPanel);
         buttonsPanel = createButtonsPanel();
         add(buttonsPanel, BorderLayout.CENTER);
@@ -231,27 +247,31 @@ public class Game extends JFrame {
         new GameSetup();
     }
 
-    // Refreshing the button label
+    // Refreshing the button label and updating mine count
     private void refreshView() {
+        int flagsPlaced = 0;
+
         for (int i = 0; i < rows; i++) {
             for (int j = 0; j < columns; j++) {
                 JButton btn = buttons[i][j];
                 String symbol = board.getFieldAt(i, j).getDisplaySymbol();
                 btn.setText(symbol);
 
+                if (symbol.equals("🚩")) {
+                    flagsPlaced++;
+                }
+
                 // Disable reveled buttons
                 if (board.getFieldAt(i, j).isRevealed()) {
                     btn.setEnabled(false);
-
-                    // Color change to disabled buttons for visibility
-                    btn.setUI(new javax.swing.plaf.metal.MetalButtonUI() {
-                        protected Color getDisabledTextColor() {
-                            return Color.BLACK;
-                        }
-                    });
+                    btn.setUI(DISABLED_UI); // Use reused UI
                 }
             }
         }
+
+        // Updating the mine count label
+        int remaining = mineAmount - flagsPlaced;
+        mineLabel.setText("Mines: " + remaining);
     }
 
     // Reveal all mines on button label
@@ -262,13 +282,7 @@ public class Game extends JFrame {
                 if (board.getFieldAt(i, j).isMine()) {
                     buttons[i][j].setText("💣");
                     buttons[i][j].setBackground(Color.RED);
-
-                    // Color change for visibility
-                    buttons[i][j].setUI(new javax.swing.plaf.metal.MetalButtonUI() {
-                        protected Color getDisabledTextColor() {
-                            return Color.BLACK;
-                        }
-                    });
+                    buttons[i][j].setUI(DISABLED_UI);
                 }
                 buttons[i][j].setEnabled(false);
             }
@@ -310,18 +324,12 @@ public class Game extends JFrame {
         JScrollPane scrollPane = new JScrollPane(table);
         scrollPane.setPreferredSize(new Dimension(350, 200));
 
-        if (difficulty != Difficulty.CUSTOM) {
-            JOptionPane.showMessageDialog(
-                    this, scrollPane,
-                    "High Scores - " + difficulty.toString().toLowerCase(),
-                    JOptionPane.PLAIN_MESSAGE
-            );
-        } else {
-            JOptionPane.showMessageDialog(
-                    this, "High Scores are disabled in Custom Difficulty",
-                    "High Scores - " + difficulty.toString().toLowerCase(),
-                    JOptionPane.PLAIN_MESSAGE
-            );
-        }
+
+        JOptionPane.showMessageDialog(
+                this,
+                (difficulty != Difficulty.CUSTOM) ? scrollPane : "High Scores are disabled in Custom Difficulty",
+                "High Scores - " + difficulty.toString().toLowerCase(),
+                JOptionPane.PLAIN_MESSAGE
+        );
     }
 }

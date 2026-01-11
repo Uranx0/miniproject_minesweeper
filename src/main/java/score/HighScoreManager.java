@@ -9,18 +9,18 @@ public class HighScoreManager {
     private final List<Score> scores = new ArrayList<>();
 
     public HighScoreManager(Difficulty difficulty, int maxAmountOfScoreboardEntries) {
-        String file_name = System.getProperty("user.dir") + "scores/scores_error.txt";
+        String file_name = System.getProperty("user.dir") + "/scores/scores_error.txt";
         switch(difficulty) {
             case EASY: {
                 file_name = System.getProperty("user.dir") + "/scores/scores_easy.txt";
                 break;
             }
             case MEDIUM: {
-                file_name = System.getProperty("user.dir") + "scores/scores_medium.txt";
+                file_name = System.getProperty("user.dir") + "/scores/scores_medium.txt";
                 break;
             }
             case HARD: {
-                file_name = System.getProperty("user.dir") + "scores/scores_hard.txt";
+                file_name = System.getProperty("user.dir") + "/scores/scores_hard.txt";
                 break;
             }
         }
