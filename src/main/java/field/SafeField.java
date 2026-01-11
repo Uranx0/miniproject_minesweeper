@@ -13,7 +13,7 @@ public class SafeField extends Field {
             return isFlagged() ? "🚩" : "";
         }
 
-        return neighborMines > 0 ? String.valueOf(neighborMines) : "0";
+        return neighborMines > 0 ? String.valueOf(neighborMines) : "";
     }
 
     public int getNeighborMines() {
