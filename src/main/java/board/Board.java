@@ -7,102 +7,114 @@ import field.MineField;
 import field.SafeField;
 
 import java.awt.Point;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Random;
+import java.util.Set;
 
 public class Board {
-    //Map with board state
-    private final Map<Point, Field> grid = new HashMap<>();
+
+    //Field with board state
+    private final Field[][] grid;
     private final int rows;
     private final int columns;
     private final int mineAmount;
+    private int revealedCount = 0;
+
+    // Directions for neighbors (Top-Left to Bottom-Right)
+    private static final int[] DX = {-1, -1, -1, 0, 0, 1, 1, 1};
+    private static final int[] DY = {-1, 0, 1, -1, 1, -1, 0, 1};
 
     public Board(int rows, int columns, int mineAmount) {
-        if (rows < 5 || columns < 5 || mineAmount >= rows * columns) {
+        // Ensuring there is enough space for mines + 3x3 safe zone
+        if (rows < 5 || columns < 5 || mineAmount >= rows * columns - 9) {
             throw new InvalidGameConfigurationException("Invalid size or mineAmount");
         }
         this.rows = rows;
         this.columns = columns;
         this.mineAmount = mineAmount;
+        this.grid = new Field[rows][columns];
+
         initializeEmptyBoard();
     }
 
     // Create board filled with SafeFields
     private void initializeEmptyBoard() {
-        // Clearing the grid
-        grid.clear();
-
-        // Filling the grid with SafeField
         for (int i = 0; i < rows; i++) {
             for (int j = 0; j < columns; j++) {
-                grid.put(new Point(i, j), new SafeField());
+                grid[i][j] = new SafeField();
             }
         }
     }
 
-    //TODO
-    // Make the game always winnable (minesweeper algorithm)
+    //TODO (Maybe implement a solver to check if board is solvable before giving it to the player)
 
     // Fill the board with mines and count neighborMines for SafeFields
-    public void initializeBoard(int originX, int originY, boolean practise) {
-        // Random MineField placement
-        HashSet<Point> mines = new HashSet<>();
-        mines.add(new Point(originX, originY));
+    public void initializeBoard(int firstClickX, int firstClickY, boolean practice) {
+        Random rng = new Random();
+        Set<Point> safeZone = new HashSet<>();
 
-        int mineCount = 0;
-        while (mineCount != mineAmount) {
-            Random rng = new Random();
+        // Defining safeZone (firstClick cell + neighbors)
+        safeZone.add(new Point(firstClickX, firstClickY));
+        for (int i = 0; i < 8; i++) {
+            int nx = firstClickX + DX[i];
+            int ny = firstClickY + DY[i];
+            if (isValid(nx, ny)) {
+                safeZone.add(new Point(nx, ny));
+            }
+        }
+
+        // Random MineField placement
+        int minesPlaced = 0;
+        while (minesPlaced < mineAmount) {
             int x = rng.nextInt(rows);
             int y = rng.nextInt(columns);
 
-            if (!mines.contains(new Point(x, y))) {
-                mines.add(new Point(x, y));
-                mineCount++;
-
-                grid.put(new Point(x, y), new MineField(practise));
+            // Skip if it's already a mine or inside the safe zone
+            if (grid[x][y].isMine() || safeZone.contains(new Point(x, y))) {
+                continue;
             }
+
+            grid[x][y] = new MineField(practice);
+            minesPlaced++;
         }
 
-        // Counting neighborMines for all SafeField's
-        // Arrays with shifts for all 8 possible neighbors
-        int[] dx = {-1, -1, -1, 0, 0, 1, 1, 1};
-        int[] dy = {-1, 0, 1, -1, 1, -1, 0, 1};
+        // Calculating Numbers for SafeFields
+        calculateNeighborMines();
+    }
 
-        for (int i = 0; i < rows; i++) {
-            for (int j = 0; j < columns; j++) {
-                Point currentPoint = new Point(i, j);
-                Field currentField = grid.get(currentPoint);
-
-                if (!currentField.isMine()) {
-                    int count = 0;
-
-                    for (int k = 0; k < 8; k++) {
-                        int nx = i + dx[k]; // neighbor x
-                        int ny = j + dy[k]; // neighbor y
-
-                        // Check if the neighbor isn't outside the Board
-                        if (nx >= 0 && nx < rows && ny >= 0 && ny < columns) {
-                            Field neighbor = grid.get(new Point(nx, ny));
-
-                            if (neighbor.isMine()) count++;
-                        }
-                    }
-
-                    if (currentField instanceof SafeField) {
-                        ((SafeField) currentField).setNeighborMines(count);
-                    }
+    // Calculate how many neighbors of a Cell are mines
+    private void calculateNeighborMines() {
+        for (int x = 0; x < rows; x++) {
+            for (int y = 0; y < columns; y++) {
+                if (!grid[x][y].isMine()) {
+                    int mines = countMinesAround(x, y);
+                    ((SafeField) grid[x][y]).setNeighborMines(mines);
                 }
             }
         }
+    }
 
+    // Count mines around a Cell
+    private int countMinesAround(int x, int y) {
+        int count = 0;
+        for (int i = 0; i < 8; i++) {
+            int nx = x + DX[i];
+            int ny = y + DY[i];
+            if (isValid(nx, ny) && grid[nx][ny].isMine()) {
+                count++;
+            }
+        }
+        return count;
     }
 
     // Cell reveal logic
     public void revealCell(int x, int y) {
-        Point point = new Point(x, y);
-        Field field = grid.get(point);
+        if (!isValid(x, y)) return;
+
+        Field field = grid[x][y];
+
+        // Stop if already revealed
+        if (field.isRevealed()) return;
 
         field.reveal();
 
@@ -110,51 +122,38 @@ public class Board {
             throw new GameOverException("Clicked on a mine");
         }
 
-        // Reveal all neighbors if Cell has 0 neighborMines
+        revealedCount++;
 
-        if (((SafeField) field).getNeighborMines() == 0) {
-            // Arrays with shifts for all 8 possible neighbors
-            int[] dx = {-1, -1, -1, 0, 0, 1, 1, 1};
-            int[] dy = {-1, 0, 1, -1, 1, -1, 0, 1};
-
+        // Revealing neighbors automatically if Cell has 0 neighborMines
+        if (field instanceof SafeField && ((SafeField) field).getNeighborMines() == 0) {
             for (int i = 0; i < 8; i++) {
-                int nx = x + dx[i]; // neighbor x
-                int ny = y + dy[i]; // neighbor y
-
-                // Check if the neighbor isn't outside the Board
-                if (nx >= 0 && nx < rows && ny >= 0 && ny < columns) {
-                    if (!grid.get(new Point(nx, ny)).isRevealed()) {
-                        this.revealCell(nx, ny);
-                    }
-                }
+                revealCell(x + DX[i], y + DY[i]);
             }
         }
     }
 
     // Cell flagging logic
     public void toggleFlagCell(int x, int y) {
-        Point point = new Point(x, y);
-        Field field = grid.get(point);
-
-        field.toggleFlag();
+        if (isValid(x, y)) {
+            grid[x][y].toggleFlag();
+        }
     }
 
     // Check for win sate
     public boolean checkWin() {
-        int count = 0;
+        // Win condition: All safe cells are revealed
+        int totalCells = rows * columns;
+        int safeCells = totalCells - mineAmount;
+        return revealedCount == safeCells;
+    }
 
-        for (int i = 0; i < rows; i++) {
-            for (int j = 0; j < columns; j++) {
-                if (grid.get(new Point(i, j)).isRevealed()) {
-                    count++;
-                }
-            }
-        }
-
-        return count == rows * columns - mineAmount;
+    // Helper method to check array bounds
+    private boolean isValid(int x, int y) {
+        return x >= 0 && x < rows && y >= 0 && y < columns;
     }
 
     public Field getFieldAt(int x, int y) {
-        return grid.get(new Point(x, y));
+        if (!isValid(x, y)) return null;
+        return grid[x][y];
     }
 }

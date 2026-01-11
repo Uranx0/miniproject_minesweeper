@@ -8,7 +8,6 @@ import java.awt.event.ActionListener;
 
 public class GameSetup extends JFrame {
 
-    // Components we need to access later
     private final JSpinner rowSpinner;
     private final JSpinner colSpinner;
     private final JSpinner mineSpinner;
@@ -51,9 +50,9 @@ public class GameSetup extends JFrame {
         JPanel customPanel = new JPanel(new FlowLayout());
         customPanel.setBorder(BorderFactory.createTitledBorder("Custom Settings  [min 5,5,1]  [max 16,30,99]"));
 
-        rowSpinner = createSpinner(9, 5, 16);
-        colSpinner = createSpinner(9, 5, 30);
-        mineSpinner = createSpinner(10, 1, 99);
+        rowSpinner = createSpinner(5, 5, 16);
+        colSpinner = createSpinner(5, 5, 30);
+        mineSpinner = createSpinner(1, 1, 99);
 
         customPanel.add(new JLabel("Rows:"));
         customPanel.add(rowSpinner);
@@ -128,7 +127,6 @@ public class GameSetup extends JFrame {
             m = 99;
             difficulty = Difficulty.HARD;
         } else {
-            // Get values from spinners
             r = (int) rowSpinner.getValue();
             c = (int) colSpinner.getValue();
             m = (int) mineSpinner.getValue();
