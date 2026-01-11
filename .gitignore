@@ -41,6 +41,5 @@ build/
 ### Custom ###
 /TODO.txt
 /scores/scores_easy.txt
-/scores/scores_error.txt
 /scores/scores_hard.txt
 /scores/scores_medium.txt
