@@ -46,8 +46,6 @@ public class Board {
         }
     }
 
-    //TODO (Maybe implement a solver to check if board is solvable before giving it to the player)
-
     // Fill the board with mines and count neighborMines for SafeFields
     public void initializeBoard(int firstClickX, int firstClickY, boolean practice) {
         Random rng = new Random();
