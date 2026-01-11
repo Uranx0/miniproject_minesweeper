@@ -33,12 +33,6 @@ public class Game extends JFrame {
     private final boolean practice;
     private final Difficulty difficulty;
 
-    private final static MetalButtonUI DISABLED_UI = new MetalButtonUI() {
-        protected Color getDisabledTextColor() {
-            return Color.BLACK;
-        }
-    };
-
     public Game(int rows, int columns, int mineAmount, boolean practice, Difficulty difficulty) {
         this.rows = rows;
         this.columns = columns;
@@ -130,8 +124,9 @@ public class Game extends JFrame {
                 // Button visuals
                 JButton button = new JButton();
                 int fontSize = (rows > 6 && columns > 6) ? 10 : 9;
-                button.setFont(new Font("Segoe UI Emoji", Font.PLAIN, fontSize));
+                button.setFont(new Font("Segoe UI Emoji", Font.BOLD, fontSize));
                 button.setFocusPainted(false);
+                styleButton(button, false);
 
                 buttons[i][j] = button;
 
@@ -158,6 +153,35 @@ public class Game extends JFrame {
         return panel;
     }
 
+    // Helper method for styling buttons
+    private void styleButton(JButton btn, boolean isRevealed) {
+        // Disable the hover "glow" effect
+        btn.setRolloverEnabled(false);
+
+        if (isRevealed) {
+            btn.setBackground(new Color(32, 32, 32));
+            btn.setBorder(BorderFactory.createLineBorder(new Color(0, 0, 0)));
+
+            btn.setUI(new MetalButtonUI() {
+                protected Color getDisabledTextColor() {
+                    return getFieldColor(btn.getText());
+                }
+            });
+        } else {
+            btn.setBackground(new Color(48, 48, 48));
+            btn.setBorder(BorderFactory.createLineBorder(new Color(32, 32, 32)));
+            btn.setRolloverEnabled(true);
+        }
+    }
+
+    private Color getFieldColor(String symbol) {
+        return switch (symbol) {
+            case "🚩" -> Color.RED;
+            case "💣" -> Color.BLACK;
+            default -> Color.WHITE;
+        };
+    }
+
     // Handling left click on buttons
     private void handleLeftClick(int x, int y) {
         if (firstClick) {
@@ -182,11 +206,11 @@ public class Game extends JFrame {
     // Handling win state
     private void handleWin() {
         gameTimer.stop();
+        revealAllMines(true);
 
         for (int i = 0; i < rows; i++) {
             for (int j = 0; j < columns; j++) {
                 buttons[i][j].setEnabled(false);
-//                buttons[i][j].setUI(DISABLED_UI);
             }
         }
 
@@ -208,7 +232,7 @@ public class Game extends JFrame {
     // Handling game over state
     private void handleGameOver() {
         gameTimer.stop();
-        revealAllMines();
+        revealAllMines(false);
 
         // Game over window with option to play again
         Object[] options = {"Play Again", "Exit"};
@@ -259,7 +283,11 @@ public class Game extends JFrame {
 
                 btn.setText(symbol);
 
-                if (symbol.equals("🚩")) {
+                // --- NEW: Set the text color ---
+                btn.setForeground(getFieldColor(symbol));
+                // -------------------------------
+
+                if (symbol.equals("🚩") || symbol.equals("💣")) {
                     flagsPlaced++;
                     styleButton(btn, false);
                 } else styleButton(btn, isRevealed);
@@ -273,37 +301,22 @@ public class Game extends JFrame {
         mineLabel.setText("Mines: " + remaining);
     }
 
-    //TODO check
-    // 2. NEW HELPER METHOD FOR STYLING
-    private void styleButton(JButton btn, boolean isRevealed) {
-        if (isRevealed) {
-            // "Flat" Look (Simulating Disabled)
-            btn.setBackground(Color.LIGHT_GRAY);
-            btn.setBorder(BorderFactory.createLineBorder(Color.GRAY)); // Simple flat border
-            btn.setRolloverEnabled(false); // Disable the hover "glow" effect
-        } else {
-            // "Raised" Look (Normal Button)
-            btn.setBackground(null); // Reset to default
-            btn.setBorder(UIManager.getBorder("Button.border")); // Reset 3D border
-            btn.setRolloverEnabled(true);
-        }
-    }
-
     // Reveal all mines on button label
-    private void revealAllMines() {
+    private void revealAllMines(boolean won) {
         for (int i = 0; i < rows; i++) {
             for (int j = 0; j < columns; j++) {
+                styleButton(buttons[i][j], true);
+                buttons[i][j].setEnabled(false);
+
                 // Show all mines
                 if (board.getFieldAt(i, j).isMine()) {
                     buttons[i][j].setText("💣");
-                    buttons[i][j].setBackground(Color.RED);
-
-                    //TODO make it look better
-//                    buttons[i][j].setUI(DISABLED_UI);
-                } else {
-                    styleButton(buttons[i][j], true);
+                    if (won) {
+                        buttons[i][j].setBackground(Color.GREEN);
+                    } else {
+                        buttons[i][j].setBackground(Color.RED);
+                    }
                 }
-                buttons[i][j].setEnabled(false);
             }
         }
     }
@@ -342,7 +355,6 @@ public class Game extends JFrame {
         // ScrollPane to put the table in
         JScrollPane scrollPane = new JScrollPane(table);
         scrollPane.setPreferredSize(new Dimension(350, 200));
-
 
         JOptionPane.showMessageDialog(
                 this,
