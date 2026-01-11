@@ -5,10 +5,27 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 public class HighScoreManager {
-    private static final String FILE_NAME = "scores.txt";
+    private final String FILE_NAME;
     private final List<Score> scores = new ArrayList<>();
 
-    public HighScoreManager(int maxAmountOfScoreboardEntries) {
+    public HighScoreManager(Difficulty difficulty, int maxAmountOfScoreboardEntries) {
+        String file_name = "scores/scores_error.txt";
+        switch(difficulty) {
+            case EASY: {
+                file_name = "scores/scores_easy.txt";
+                break;
+            }
+            case MEDIUM: {
+                file_name = "scores/scores_medium.txt";
+                break;
+            }
+            case HARD: {
+                file_name = "scores/scores_hard.txt";
+                break;
+            }
+        }
+        FILE_NAME = file_name;
+
         loadFromFile(maxAmountOfScoreboardEntries);
     }
 

@@ -2,6 +2,7 @@ package GUI;
 
 import board.Board;
 import exceptions.GameOverException;
+import score.Difficulty;
 import score.HighScoreManager;
 import score.Score;
 
@@ -25,17 +26,19 @@ public class Game extends JFrame {
     private JPanel buttonsPanel;
     private boolean firstClick = true;
     private final boolean practice;
+    private final Difficulty difficulty;
 
-    public Game(int rows, int columns, int mineAmount, boolean practice) {
+    public Game(int rows, int columns, int mineAmount, boolean practice, Difficulty difficulty) {
         this.rows = rows;
         this.columns = columns;
         this.mineAmount = mineAmount;
         this.practice = practice;
+        this.difficulty = difficulty;
         this.highScoreEntryAmount = 10;
         this.board = new Board(rows, columns, mineAmount);
         this.buttons = new JButton[rows][columns];
 
-        this.highScoreManager = new HighScoreManager(1000);
+        this.highScoreManager = new HighScoreManager(difficulty, 1000);
 
         // Window setup
         setTitle("Minesweeper");
@@ -100,7 +103,9 @@ public class Game extends JFrame {
 
                 // Button visuals
                 JButton button = new JButton();
-                button.setFont(new Font("Segoe UI Emoji", Font.PLAIN, 10));
+                if (rows > 6 && columns > 6) {
+                    button.setFont(new Font("Segoe UI Emoji", Font.PLAIN, 10));
+                } else button.setFont(new Font("Segoe UI Emoji", Font.PLAIN, 9));
                 button.setFocusPainted(false);
 
                 buttons[i][j] = button;
@@ -153,15 +158,37 @@ public class Game extends JFrame {
     private void handleWin() {
         gameTimer.stop();
 
-        String name = JOptionPane.showInputDialog(
-                this,
-                "You win!\nTime: " + gameTimer.getTimeInSeconds() + "s\nEnter your name:"
-        );
+        for (int i = 0; i < rows; i++) {
+            for (int j = 0; j < columns; j++) {
+                buttons[i][j].setEnabled(false);
 
-        if (name != null && !name.trim().isEmpty()) {
-            highScoreManager.addScore(name, gameTimer.getTimeInSeconds());
-            showHighscores(highScoreEntryAmount);
+                // Color change to disabled buttons for visibility
+                buttons[i][j].setUI(new javax.swing.plaf.metal.MetalButtonUI() {
+                    protected Color getDisabledTextColor() {
+                        return Color.BLACK;
+                    }
+                });
+            }
         }
+
+        if (!practice && difficulty != Difficulty.CUSTOM) {
+            String name = JOptionPane.showInputDialog(
+                    this,
+                    "You win!\nTime: " + gameTimer.getTimeInSeconds() + "s\nEnter your name:"
+            );
+
+            if (name != null && !name.trim().isEmpty()) {
+                highScoreManager.addScore(name, gameTimer.getTimeInSeconds());
+                showHighscores(highScoreEntryAmount);
+            }
+
+        } else {
+            JOptionPane.showMessageDialog(
+                    this,
+                    "You win!\nTime: " + gameTimer.getTimeInSeconds()
+            );
+        }
+
     }
 
     // Handling game over state
@@ -283,6 +310,18 @@ public class Game extends JFrame {
         JScrollPane scrollPane = new JScrollPane(table);
         scrollPane.setPreferredSize(new Dimension(350, 200));
 
-        JOptionPane.showMessageDialog(this, scrollPane, "High Scores", JOptionPane.PLAIN_MESSAGE);
+        if (difficulty != Difficulty.CUSTOM) {
+            JOptionPane.showMessageDialog(
+                    this, scrollPane,
+                    "High Scores - " + difficulty.toString().toLowerCase(),
+                    JOptionPane.PLAIN_MESSAGE
+            );
+        } else {
+            JOptionPane.showMessageDialog(
+                    this, "High Scores are disabled in Custom Difficulty",
+                    "High Scores - " + difficulty.toString().toLowerCase(),
+                    JOptionPane.PLAIN_MESSAGE
+            );
+        }
     }
 }

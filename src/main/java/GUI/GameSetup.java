@@ -1,5 +1,7 @@
 package GUI;
 
+import score.Difficulty;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionListener;
@@ -108,24 +110,29 @@ public class GameSetup extends JFrame {
     private void startGame() {
         int r, c, m;
         boolean practise = practiceCheckBox.isSelected();
+        Difficulty difficulty;
 
         if (easyBtn.isSelected()) {
             r = 9;
             c = 9;
             m = 10;
+            difficulty = Difficulty.EASY;
         } else if (mediumBtn.isSelected()) {
             r = 16;
             c = 16;
             m = 40;
+            difficulty = Difficulty.MEDIUM;
         } else if (hardBtn.isSelected()) {
             r = 16;
             c = 30;
             m = 99;
+            difficulty = Difficulty.HARD;
         } else {
             // Get values from spinners
             r = (int) rowSpinner.getValue();
             c = (int) colSpinner.getValue();
             m = (int) mineSpinner.getValue();
+            difficulty = Difficulty.CUSTOM;
         }
 
         // Check if picked amount of mines fits on the board
@@ -134,6 +141,6 @@ public class GameSetup extends JFrame {
         }
 
         this.dispose();
-        new Game(r, c, m, practise);
+        new Game(r, c, m, practise, difficulty);
     }
 }
