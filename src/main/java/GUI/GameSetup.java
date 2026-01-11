@@ -13,6 +13,7 @@ public class GameSetup extends JFrame {
     private final JRadioButton easyBtn;
     private final JRadioButton mediumBtn;
     private final JRadioButton hardBtn;
+    private final JCheckBox practiceCheckBox;
 
     public GameSetup() {
         setTitle("New Game Setup");
@@ -29,6 +30,9 @@ public class GameSetup extends JFrame {
         hardBtn = new JRadioButton("Hard (16x30, 99 Mines)");
         JRadioButton customBtn = new JRadioButton("Custom");
 
+        practiceCheckBox = new JCheckBox("Practice Mode?");
+        practiceCheckBox.setSelected(false);
+
         // Grouping the buttons so only one can be selected
         group.add(easyBtn);
         group.add(mediumBtn);
@@ -36,9 +40,10 @@ public class GameSetup extends JFrame {
         group.add(customBtn);
 
         presetPanel.add(easyBtn);
-        presetPanel.add(mediumBtn);
-        presetPanel.add(hardBtn);
         presetPanel.add(customBtn);
+        presetPanel.add(mediumBtn);
+        presetPanel.add(practiceCheckBox);
+        presetPanel.add(hardBtn);
 
         // Custom input panel
         JPanel customPanel = new JPanel(new FlowLayout());
@@ -102,6 +107,7 @@ public class GameSetup extends JFrame {
     // Starting the Game
     private void startGame() {
         int r, c, m;
+        boolean practise = practiceCheckBox.isSelected();
 
         if (easyBtn.isSelected()) {
             r = 9;
@@ -128,6 +134,6 @@ public class GameSetup extends JFrame {
         }
 
         this.dispose();
-        new Game(r, c, m);
+        new Game(r, c, m, practise);
     }
 }

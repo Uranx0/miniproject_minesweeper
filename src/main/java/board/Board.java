@@ -46,7 +46,7 @@ public class Board {
     // Make the game always winnable (minesweeper algorithm)
 
     // Fill the board with mines and count neighborMines for SafeFields
-    public void initializeBoard(int originX, int originY) {
+    public void initializeBoard(int originX, int originY, boolean practise) {
         // Random MineField placement
         HashSet<Point> mines = new HashSet<>();
         mines.add(new Point(originX, originY));
@@ -61,7 +61,7 @@ public class Board {
                 mines.add(new Point(x, y));
                 mineCount++;
 
-                grid.put(new Point(x, y), new MineField());
+                grid.put(new Point(x, y), new MineField(practise));
             }
         }
 

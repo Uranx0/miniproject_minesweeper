@@ -24,11 +24,13 @@ public class Game extends JFrame {
     private final GameTimer gameTimer;
     private JPanel buttonsPanel;
     private boolean firstClick = true;
+    private final boolean practice;
 
-    public Game(int rows, int columns, int mineAmount) {
+    public Game(int rows, int columns, int mineAmount, boolean practice) {
         this.rows = rows;
         this.columns = columns;
         this.mineAmount = mineAmount;
+        this.practice = practice;
         this.highScoreEntryAmount = 10;
         this.board = new Board(rows, columns, mineAmount);
         this.buttons = new JButton[rows][columns];
@@ -129,7 +131,7 @@ public class Game extends JFrame {
     // Handling left click on buttons
     private void handleLeftClick(int x, int y) {
         if (firstClick) {
-            this.board.initializeBoard(x, y);
+            this.board.initializeBoard(x, y, practice);
             gameTimer.start();
             firstClick = false;
         }

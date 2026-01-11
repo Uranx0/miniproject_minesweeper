@@ -15,7 +15,7 @@ public class BoardTest {
         int cols = 10;
         int mineAmount = 15;
         Board board = new Board(rows, cols, mineAmount);
-        board.initializeBoard(0, 0);
+        board.initializeBoard(0, 0, false);
 
         int actualMines = 0;
         for (int i = 0; i < rows; i++) {
@@ -45,7 +45,7 @@ public class BoardTest {
     @Test
     void testToggleFlag() {
         Board board = new Board(10, 10, 5);
-        board.initializeBoard(0, 0);
+        board.initializeBoard(0, 0, false);
         int x = 0;
         int y = 0;
 
@@ -66,7 +66,7 @@ public class BoardTest {
         int rows = 5;
         int cols = 5;
         Board board = new Board(rows, cols, 10);
-        board.initializeBoard(0, 0);
+        board.initializeBoard(0, 0, false);
 
         Point mineLocation = null;
 

@@ -1,9 +1,11 @@
 package field;
 
 public class MineField extends Field {
+    private final boolean practise;
 
-    public MineField() {
+    public MineField(boolean practise) {
         super();
+        this.practise = practise;
     }
 
     @Override
@@ -13,9 +15,9 @@ public class MineField extends Field {
 
     @Override
     public String getDisplaySymbol() {
-//        return isRevealed() ? "💣" : (isFlagged() ? "🚩" : "");
-
-        // Cheat version for testing bellow
-        return isRevealed() ? "💣" : (isFlagged() ? "💣" : "");
+        if (practise) {
+            return isRevealed() ? "💣" : (isFlagged() ? "💣" : "");
+        }
+        return isRevealed() ? "💣" : (isFlagged() ? "🚩" : "");
     }
 }
