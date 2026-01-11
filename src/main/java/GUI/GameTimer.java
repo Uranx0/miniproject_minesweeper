@@ -16,7 +16,6 @@ public class GameTimer {
 
         // Timer visuals
         timeLabel.setText("Time: 0s");
-        timeLabel.setFont(new Font("Segoe UI", Font.BOLD, 20));
         timeLabel.setHorizontalAlignment(SwingConstants.RIGHT);
 
         // Updating timer every 100 ms
