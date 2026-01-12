@@ -1,93 +1,125 @@
 package tests.board;
 
 import board.Board;
-import exceptions.*;
+import exceptions.GameOverException;
+import exceptions.InvalidGameConfigurationException;
+import field.Field;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-
-import java.awt.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-public class BoardTest {
-    @Test
-    void testMineCount() {
-        int rows = 10;
-        int cols = 10;
-        int mineAmount = 15;
-        Board board = new Board(rows, cols, mineAmount);
-        board.initializeBoard(0, 0, false);
+class BoardTest {
 
-        int actualMines = 0;
-        for (int i = 0; i < rows; i++) {
-            for (int j = 0; j < cols; j++) {
-                if (board.getFieldAt(i, j).isMine()) {
-                    actualMines++;
-                }
-            }
-        }
+    private Board board;
+    private final int ROWS = 9;
+    private final int COLS = 9;
+    private final int MINES = 10;
 
-        assertEquals(mineAmount, actualMines, "The number of mines on the board should match the configuration.");
+    @BeforeEach
+    void setUp() {
+        // Create a fresh board before every test
+        board = new Board(ROWS, COLS, MINES);
     }
 
     @Test
     void testInvalidConfiguration() {
-        int rows = 5;
-        int cols = 5;
-        int tooManyMines = 26;
+        assertThrows(
+                InvalidGameConfigurationException.class,
+                () -> new Board(ROWS, COLS, 0),
+                "Constructor should throw exception if minesAmount is 0 or less"
+        );
 
         assertThrows(
                 InvalidGameConfigurationException.class,
-                () -> new Board(rows, cols, tooManyMines),
-                "Constructor should throw exception if mines count is greater than board size."
+                () -> new Board(ROWS, COLS, ROWS*COLS-9),
+                "Constructor should throw exception if minesAmount is greater than board size"
         );
     }
 
     @Test
-    void testToggleFlag() {
-        Board board = new Board(10, 10, 5);
-        board.initializeBoard(0, 0, false);
-        int x = 0;
-        int y = 0;
-
-        // Flag the cell
-        board.toggleFlagCell(x, y);
-        boolean isFlaggedAfterFirstClick = board.getFieldAt(x, y).isFlagged();
-
-        // Unflag the cell
-        board.toggleFlagCell(x, y);
-        boolean isFlaggedAfterSecondClick = board.getFieldAt(x, y).isFlagged();
-
-        assertTrue(isFlaggedAfterFirstClick, "Field should be flagged after first toggle.");
-        assertFalse(isFlaggedAfterSecondClick, "Field should be unflagged after second toggle.");
+    void testBoardInitializationDimensions() {
+        // Check if the grid was created with correct size
+        assertNotNull(board.getFieldAt(0, 0));
+        assertNotNull(board.getFieldAt(ROWS - 1, COLS - 1));
+        assertNull(board.getFieldAt(ROWS, COLS), "Out of bounds should return null");
     }
 
     @Test
-    void testRevealingMineThrowsException() {
-        int rows = 5;
-        int cols = 5;
-        Board board = new Board(rows, cols, 10);
+    void testFirstClickIsSafe() {
+        // Initialize the board by clicking at 0,0
         board.initializeBoard(0, 0, false);
 
-        Point mineLocation = null;
+        Field startField = board.getFieldAt(0, 0);
 
-        // Finding a location with a mine
-        for (int i = 0; i < rows; i++) {
-            for (int j = 0; j < cols; j++) {
+        // The first clicked cell must NOT be a mine
+        assertFalse(startField.isMine(), "First click should never be a mine");
+    }
+
+    @Test
+    void testMineCount() {
+        board.initializeBoard(5, 5, false);
+
+        int mineCounter = 0;
+        for (int i = 0; i < ROWS; i++) {
+            for (int j = 0; j < COLS; j++) {
                 if (board.getFieldAt(i, j).isMine()) {
-                    mineLocation = new Point(i, j);
+                    mineCounter++;
+                }
+            }
+        }
+        assertEquals(MINES, mineCounter, "Board should generate exactly " + MINES + " mines");
+    }
+
+    @Test
+    void testFlagging() {
+        // Flag a cell
+        board.toggleFlagCell(1, 1);
+        assertTrue(board.getFieldAt(1, 1).isFlagged(), "Cell should be flagged");
+
+        // Unflag a cell
+        board.toggleFlagCell(1, 1);
+        assertFalse(board.getFieldAt(1, 1).isFlagged(), "Cell should be unflagged");
+    }
+
+    @Test
+    void testGameOverOnMineClick() {
+        board.initializeBoard(0, 0, false);
+
+        // Find a mine location to click
+        int mineX = -1, mineY = -1;
+        for (int i = 0; i < ROWS; i++) {
+            for (int j = 0; j < COLS; j++) {
+                if (board.getFieldAt(i, j).isMine()) {
+                    mineX = i;
+                    mineY = j;
                     break;
                 }
             }
-            if (mineLocation != null) break;
         }
 
-        assertNotNull(mineLocation, "Board should contain at least one mine.");
+        // Assert that clicking it throws the exception
+        int finalMineX = mineX;
+        int finalMineY = mineY;
+        assertThrows(GameOverException.class, () -> board.revealCell(finalMineX, finalMineY));
+    }
 
-        Point finalMineLocation = mineLocation;
-        assertThrows(
-                GameOverException.class,
-                () -> board.revealCell(finalMineLocation.x, finalMineLocation.y),
-                "Revealing a mine should throw GameOverException."
-        );
+    @Test
+    void testWinCondition() {
+        // Create a very small board: 5x5 with 1 mine
+        Board smallBoard = new Board(5, 5, 1);
+        // Initialize at 0,0 (safe)
+        smallBoard.initializeBoard(0, 0, false);
+
+        // Reveal ALL non-mine cells
+        for (int i = 0; i < 5; i++) {
+            for (int j = 0; j < 5; j++) {
+                if (!smallBoard.getFieldAt(i, j).isMine()) {
+                    smallBoard.revealCell(i, j);
+                }
+            }
+        }
+
+        assertTrue(smallBoard.checkWin(), "Game should be won when all safe cells are revealed");
     }
 }

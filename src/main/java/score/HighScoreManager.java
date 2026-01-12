@@ -5,37 +5,40 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 public class HighScoreManager {
-    private final String FILE_NAME;
+
+    private final String fileName;
+    private final Difficulty difficulty;
+    private final int maxEntries;
     private final List<Score> scores = new ArrayList<>();
 
-    public HighScoreManager(Difficulty difficulty, int maxAmountOfScoreboardEntries) {
-        String file_name = System.getProperty("user.dir") + "/scores/scores_error.txt";
-        switch(difficulty) {
-            case EASY: {
-                file_name = System.getProperty("user.dir") + "/scores/scores_easy.txt";
-                break;
-            }
-            case MEDIUM: {
-                file_name = System.getProperty("user.dir") + "/scores/scores_medium.txt";
-                break;
-            }
-            case HARD: {
-                file_name = System.getProperty("user.dir") + "/scores/scores_hard.txt";
-                break;
-            }
-        }
-        FILE_NAME = file_name;
+    private static final String DEFAULT_FILE = "minesweeper_scores.dat";
 
-        loadFromFile(maxAmountOfScoreboardEntries);
+    // Default Constructor: Used in Game
+    public HighScoreManager(Difficulty difficulty, int maxEntries) {
+        this(difficulty, maxEntries, DEFAULT_FILE);
     }
 
-    // Adding new scores
+    // Constructor: Used in testing with Custom File
+    public HighScoreManager(Difficulty difficulty, int maxEntries, String fileName) {
+        this.difficulty = difficulty;
+        this.maxEntries = maxEntries;
+        this.fileName = fileName;
+
+        ensureFileExists();
+        loadFromFile();
+    }
+
     public void addScore(String playerName, int timeInSeconds) {
         scores.add(new Score(playerName, timeInSeconds));
+
+        // Sorting and trimming strictly to maxEntries
+        scores.sort(Comparator.comparingInt(Score::getTimeInSeconds));
+        if (scores.size() > maxEntries) {
+            scores.subList(maxEntries, scores.size()).clear();
+        }
         saveToFile();
     }
 
-    // Finding top 'amount' scores
     public List<Score> getTopScores(int amount) {
         return scores.stream()
                 .sorted(Comparator.comparingInt(Score::getTimeInSeconds))
@@ -45,45 +48,86 @@ public class HighScoreManager {
 
     // Saving scores to file
     private void saveToFile() {
-        scores.sort(Comparator.comparingInt(Score::getTimeInSeconds));
+        List<String> linesToWrite = new ArrayList<>();
+        File file = new File(fileName);
 
-        File file = new File(FILE_NAME);
-
-        try {
-            BufferedWriter writer = new BufferedWriter(new FileWriter(file));
-
-            for (Score s : scores) {
-                writer.write(s.toString() + "\n");
+        // Reading existing content to preserve other difficulties
+        if (file.exists()) {
+            try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    // If the line DOES NOT start with "CURRENT_DIFFICULTY:", keep it.
+                    if (!line.startsWith(difficulty.name() + ":")) {
+                        linesToWrite.add(line);
+                    }
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
             }
-            writer.close();
+        }
 
+        // Adding current scores (Already sorted and trimmed by addScore)
+        for (Score s : scores) {
+            linesToWrite.add(difficulty.name() + ":" + s.getPlayerName() + ":" + s.getTimeInSeconds());
+        }
+
+        // Writing completely fresh file content
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(file))) {
+            for (String line : linesToWrite) {
+                writer.write(line);
+                writer.newLine();
+            }
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            e.printStackTrace();
         }
     }
 
-    // Loading scores form file
-    private void loadFromFile(int maxEntries) {
-        File file = new File(FILE_NAME);
-        int count = 0;
+    private void loadFromFile() {
+        File file = new File(fileName);
+        if (!file.exists()) return;
 
-        try {
-            BufferedReader reader = new BufferedReader(new FileReader(file));
+        scores.clear();
 
+        try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
             String line;
-            while ((line = reader.readLine()) != null && count < maxEntries) {
-                String[] score = line.split(" ");
+            while ((line = reader.readLine()) != null) {
+                String[] parts = line.split(":");
 
-                try {
-                    count++;
-                    this.scores.add(new Score(score[0], Integer.parseInt(score[1])));
-                } catch (Exception e) {
-                    System.out.println("Invalid entry: \"" + line + "\"");
+                // Checking if line matches "DIFFICULTY:Name:Time"
+                if (parts.length == 3 && parts[0].equals(difficulty.name())) {
+
+                    // Stop loading if file somehow has too many entries
+                    if (scores.size() >= maxEntries) continue;
+
+                    try {
+                        String name = parts[1];
+                        int time = Integer.parseInt(parts[2]);
+                        scores.add(new Score(name, time));
+                    } catch (NumberFormatException e) {
+                        // Ignoring corrupted lines
+                    }
                 }
             }
         } catch (IOException e) {
-            System.out.println("Error reading file / file is empty");
+            System.err.println("Error loading scores.");
         }
 
+        // Ensuring the scores are sorted after loading
+        scores.sort(Comparator.comparingInt(Score::getTimeInSeconds));
+    }
+
+    private void ensureFileExists() {
+        try {
+            File file = new File(fileName);
+            // Create parent directories if they don't exist (e.g. "scores/")
+            if (file.getParentFile() != null) {
+                file.getParentFile().mkdirs();
+            }
+            if (!file.exists()) {
+                file.createNewFile();
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }

@@ -70,7 +70,7 @@ public class Game extends JFrame {
         this.board = new Board(rows, columns, mineAmount);
         this.buttons = new JButton[rows][columns];
 
-        this.highScoreManager = new HighScoreManager(difficulty, 1000);
+        this.highScoreManager = new HighScoreManager(difficulty, 100);
 
         // Window setup
         setTitle("Minesweeper");

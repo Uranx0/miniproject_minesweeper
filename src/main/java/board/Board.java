@@ -25,8 +25,8 @@ public class Board {
     private static final int[] DY = {-1, 0, 1, -1, 1, -1, 0, 1};
 
     public Board(int rows, int columns, int mineAmount) {
-        // Ensuring there is enough space for mines + 3x3 safe zone
-        if (rows < 5 || columns < 5 || mineAmount >= rows * columns - 9) {
+        // Ensuring there is enough space for mines + 3x3 safe zone and if there is a mine
+        if (rows < 5 || columns < 5 || mineAmount >= rows * columns - 9 || mineAmount <= 0) {
             throw new InvalidGameConfigurationException("Invalid size or mineAmount");
         }
         this.rows = rows;

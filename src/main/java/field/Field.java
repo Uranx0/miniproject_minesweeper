@@ -21,7 +21,9 @@ public abstract class Field {
     }
 
     public void toggleFlag() {
-        flagged = !flagged;
+        if (!revealed) {
+            flagged = !flagged;
+        }
     }
 
     // GUI Method
