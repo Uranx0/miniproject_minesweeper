@@ -62,7 +62,7 @@ public class HighScoreManager {
                     }
                 }
             } catch (IOException e) {
-                e.printStackTrace();
+                System.err.println("Warning: Failed to read existing scores for merging: " + e.getMessage());
             }
         }
 
@@ -78,7 +78,7 @@ public class HighScoreManager {
                 writer.newLine();
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            System.err.println("Error: Failed to save high scores to file: " + e.getMessage());
         }
     }
 
@@ -117,17 +117,20 @@ public class HighScoreManager {
     }
 
     private void ensureFileExists() {
+        File file = new File(fileName);
         try {
-            File file = new File(fileName);
-            // Create parent directories if they don't exist (e.g. "scores/")
-            if (file.getParentFile() != null) {
-                file.getParentFile().mkdirs();
+            File parent = file.getParentFile();
+
+            if (parent != null && !parent.exists() && !parent.mkdirs()) {
+                System.err.println("Error: Failed to create directory structure: " + parent.getAbsolutePath());
             }
-            if (!file.exists()) {
-                file.createNewFile();
+
+            if (!file.exists() && !file.createNewFile()) {
+                System.err.println("Warning: File creation returned false (file already exists?): " + file.getAbsolutePath());
             }
+
         } catch (IOException e) {
-            e.printStackTrace();
+            System.err.println("Critical Error: Could not initialize high score file: " + e.getMessage());
         }
     }
 }

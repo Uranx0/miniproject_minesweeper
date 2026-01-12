@@ -32,8 +32,8 @@ class HighScoreManagerTest {
 
     private void deleteTestFile() {
         File file = new File(TEST_FILE);
-        if (file.exists()) {
-            file.delete();
+        if (file.exists() && !file.delete()) {
+            System.err.println("Warning: Failed to delete test file (is it open?): " + file.getAbsolutePath());
         }
     }
 
