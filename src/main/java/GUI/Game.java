@@ -10,6 +10,8 @@ import javax.swing.*;
 import javax.swing.plaf.metal.MetalButtonUI;
 import javax.swing.table.DefaultTableCellRenderer;
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.List;
@@ -89,6 +91,29 @@ public class Game extends JFrame {
         JPanel headerPanel = new JPanel(new BorderLayout());
         headerPanel.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
         headerPanel.setBackground(BG_DARK);
+
+        // R - reset & N - new game (key binds)
+        InputMap inputMap = headerPanel.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW);
+        ActionMap actionMap = headerPanel.getActionMap();
+
+        KeyStroke rKey = KeyStroke.getKeyStroke(KeyEvent.VK_R, 0);
+        inputMap.put(rKey, "resetGame");
+        actionMap.put("resetGame", new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                resetGame();
+            }
+        });
+
+        KeyStroke nKey = KeyStroke.getKeyStroke(KeyEvent.VK_N, 0);
+        inputMap.put(nKey, "newGame");
+        actionMap.put("newGame", new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                newGame();
+            }
+        });
+        // -------------------------------------------
 
         // Mine counter (left)
         mineLabel = new JLabel("Mines: " + mineAmount);
