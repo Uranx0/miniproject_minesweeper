@@ -11,7 +11,7 @@ public class HighScoreManager {
     private final int maxEntries;
     private final List<Score> scores = new ArrayList<>();
 
-    private static final String DEFAULT_FILE = "minesweeper_scores.dat";
+    private static final String DEFAULT_FILE = "minesweeper_scores.txt";
 
     // Default Constructor: Used in Game
     public HighScoreManager(Difficulty difficulty, int maxEntries) {
@@ -109,7 +109,7 @@ public class HighScoreManager {
                 }
             }
         } catch (IOException e) {
-            System.err.println("Error loading scores.");
+            System.err.println("Error: Failed to load scores");
         }
 
         // Ensuring the scores are sorted after loading

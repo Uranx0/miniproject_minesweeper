@@ -204,8 +204,9 @@ public class GameSetup extends JFrame {
         }
 
         // Check if picked amount of mines fits on the board
-        if (m >= r * c) {
+        if (m >= r * c - 9) {
             JOptionPane.showMessageDialog(this, "Too many mines for board size");
+            return;
         }
 
         this.dispose();
