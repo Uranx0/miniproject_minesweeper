@@ -6,6 +6,7 @@ import javax.swing.*;
 import javax.swing.border.TitledBorder;
 import java.awt.*;
 import java.awt.event.ActionListener;
+import java.util.prefs.Preferences;
 
 public class GameSetup extends JFrame {
 
@@ -15,7 +16,10 @@ public class GameSetup extends JFrame {
     private final JRadioButton easyBtn;
     private final JRadioButton mediumBtn;
     private final JRadioButton hardBtn;
+    private final JRadioButton customBtn;
     private final JCheckBox practiceCheckBox;
+
+    private final Preferences prefs = Preferences.userNodeForPackage(GameSetup.class);
 
     // --- THEME COLORS ---
     private static final Color BG_DARK = new Color(43, 43, 43);
@@ -39,7 +43,7 @@ public class GameSetup extends JFrame {
         easyBtn = createDarkRadioButton("Easy (9x9, 10 Mines)");
         mediumBtn = createDarkRadioButton("Medium (16x16, 40 Mines)");
         hardBtn = createDarkRadioButton("Hard (16x30, 99 Mines)");
-        JRadioButton customBtn = createDarkRadioButton("Custom");
+        customBtn = createDarkRadioButton("Custom");
 
         practiceCheckBox = new JCheckBox("Practice Mode?");
         practiceCheckBox.setBackground(BG_DARK);
@@ -84,8 +88,6 @@ public class GameSetup extends JFrame {
 
         customBtn.addActionListener(e -> toggleCustomFields(true));
 
-        easyBtn.setSelected(true);
-
         // Start button
         JButton startButton = new JButton("Start Game");
         startButton.setFont(new Font("Segoe UI", Font.BOLD, 14));
@@ -116,6 +118,8 @@ public class GameSetup extends JFrame {
         mainContainer.add(startButton, BorderLayout.SOUTH);
 
         add(mainContainer);
+
+        loadSettings();
 
         pack();
         setLocationRelativeTo(null);
@@ -165,6 +169,35 @@ public class GameSetup extends JFrame {
         mineSpinner.setEnabled(enable);
     }
 
+    private void saveSettings(Difficulty difficulty) {
+        prefs.put("DIFFICULTY", difficulty.name());
+
+        prefs.putBoolean("PRACTICE", practiceCheckBox.isSelected());
+
+        prefs.putInt("CUSTOM_ROWS", (int) rowSpinner.getValue());
+        prefs.putInt("CUSTOM_COLS", (int) colSpinner.getValue());
+        prefs.putInt("CUSTOM_MINES", (int) mineSpinner.getValue());
+    }
+
+    private void loadSettings() {
+        practiceCheckBox.setSelected(prefs.getBoolean("PRACTICE", false));
+
+        rowSpinner.setValue(prefs.getInt("CUSTOM_ROWS", 16));
+        colSpinner.setValue(prefs.getInt("CUSTOM_COLS", 30));
+        mineSpinner.setValue(prefs.getInt("CUSTOM_MINES", 99));
+
+        String diffName = prefs.get("DIFFICULTY", "EASY");
+        switch (diffName) {
+            case "MEDIUM" -> mediumBtn.setSelected(true);
+            case "HARD" -> hardBtn.setSelected(true);
+            case "CUSTOM" -> {
+                customBtn.setSelected(true);
+                toggleCustomFields(true);
+            }
+            default -> easyBtn.setSelected(true);
+        }
+    }
+
     private void startGame() {
         int r, c, m;
         boolean practise = practiceCheckBox.isSelected();
@@ -196,6 +229,8 @@ public class GameSetup extends JFrame {
             JOptionPane.showMessageDialog(this, "Too many mines for board size");
             return;
         }
+
+        saveSettings(difficulty);
 
         this.dispose();
         new Game(r, c, m, practise, difficulty);
