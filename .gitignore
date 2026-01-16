@@ -37,7 +37,3 @@ build/
 
 ### Mac OS ###
 .DS_Store
-
-### Custom ###
-/TODO.txt
-/minesweeper_scores.txt
