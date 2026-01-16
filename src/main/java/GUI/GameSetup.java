@@ -28,7 +28,6 @@ public class GameSetup extends JFrame {
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLayout(new BorderLayout(10, 10));
 
-        // Apply Dark Theme to Main Window
         getContentPane().setBackground(BG_DARK);
 
         // Presets panel
@@ -48,7 +47,6 @@ public class GameSetup extends JFrame {
         practiceCheckBox.setFocusPainted(false);
         practiceCheckBox.setSelected(false);
 
-        // Grouping the buttons so only one can be selected
         group.add(easyBtn);
         group.add(mediumBtn);
         group.add(hardBtn);
@@ -63,11 +61,11 @@ public class GameSetup extends JFrame {
         // Custom input panel
         JPanel customPanel = new JPanel(new FlowLayout());
         customPanel.setBackground(BG_DARK);
-        customPanel.setBorder(createDarkTitledBorder("Custom Settings  [MIN 5x5]  [MAX 16x30]"));
+        customPanel.setBorder(createDarkTitledBorder("Custom Settings [5 - 30 : 5 - 60 : 1 - 400]"));
 
-        rowSpinner = createDarkSpinner(5, 5, 16);
-        colSpinner = createDarkSpinner(5, 5, 30);
-        mineSpinner = createDarkSpinner(1, 1, 99);
+        rowSpinner = createDarkSpinner(16, 5, 30);
+        colSpinner = createDarkSpinner(30, 5, 60);
+        mineSpinner = createDarkSpinner(99, 1, 400);
 
         customPanel.add(createDarkLabel("Rows:"));
         customPanel.add(rowSpinner);
@@ -76,19 +74,16 @@ public class GameSetup extends JFrame {
         customPanel.add(createDarkLabel("Mines:"));
         customPanel.add(mineSpinner);
 
-        // Disable custom fields by default
-        enableCustomFields(false);
+        toggleCustomFields(false);
 
         // ActionListeners for RadioButtons
-        ActionListener presetListener = e -> enableCustomFields(false);
+        ActionListener presetListener = e -> toggleCustomFields(false);
         easyBtn.addActionListener(presetListener);
         mediumBtn.addActionListener(presetListener);
         hardBtn.addActionListener(presetListener);
 
-        // Enable spinners ONLY when "Custom" is clicked
-        customBtn.addActionListener(e -> enableCustomFields(true));
+        customBtn.addActionListener(e -> toggleCustomFields(true));
 
-        // Select Easy by default
         easyBtn.setSelected(true);
 
         // Start button
@@ -99,7 +94,6 @@ public class GameSetup extends JFrame {
         startButton.setFocusPainted(false);
         startButton.setBorder(BorderFactory.createEmptyBorder(10, 0, 10, 0));
 
-        // Add hover effect
         startButton.addMouseListener(new java.awt.event.MouseAdapter() {
             public void mouseEntered(java.awt.event.MouseEvent evt) {
                 startButton.setBackground(new Color(100, 149, 237)); // Lighter Blue
@@ -123,12 +117,10 @@ public class GameSetup extends JFrame {
 
         add(mainContainer);
 
-        pack(); // Auto-size window
+        pack();
         setLocationRelativeTo(null);
         setVisible(true);
     }
-
-    // --- HELPER METHODS FOR DARK STYLING ---
 
     private JRadioButton createDarkRadioButton(String text) {
         JRadioButton btn = new JRadioButton(text);
@@ -154,7 +146,6 @@ public class GameSetup extends JFrame {
     private JSpinner createDarkSpinner(int val, int min, int max) {
         JSpinner spinner = new JSpinner(new SpinnerNumberModel(val, min, max, 1));
 
-        // Styling the text field inside the spinner
         JComponent editor = spinner.getEditor();
         if (editor instanceof JSpinner.DefaultEditor) {
             JFormattedTextField tf = ((JSpinner.DefaultEditor) editor).getTextField();
@@ -168,14 +159,12 @@ public class GameSetup extends JFrame {
         return spinner;
     }
 
-    // Enable/Disable custom fields
-    private void enableCustomFields(boolean enable) {
+    private void toggleCustomFields(boolean enable) {
         rowSpinner.setEnabled(enable);
         colSpinner.setEnabled(enable);
         mineSpinner.setEnabled(enable);
     }
 
-    // Starting the Game
     private void startGame() {
         int r, c, m;
         boolean practise = practiceCheckBox.isSelected();
@@ -203,7 +192,6 @@ public class GameSetup extends JFrame {
             difficulty = Difficulty.CUSTOM;
         }
 
-        // Check if picked amount of mines fits on the board
         if (m >= r * c - 9) {
             JOptionPane.showMessageDialog(this, "Too many mines for board size");
             return;

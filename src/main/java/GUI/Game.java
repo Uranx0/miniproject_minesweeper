@@ -10,10 +10,7 @@ import javax.swing.*;
 import javax.swing.plaf.metal.MetalButtonUI;
 import javax.swing.table.DefaultTableCellRenderer;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.KeyEvent;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
+import java.awt.event.*;
 import java.util.List;
 
 public class Game extends JFrame {
@@ -22,6 +19,7 @@ public class Game extends JFrame {
     private final int columns;
     private final int mineAmount;
     private final int highScoreEntryAmount;
+    private final int scale;
 
     private Board board;
     private final JButton[][] buttons;
@@ -29,6 +27,7 @@ public class Game extends JFrame {
     private final GameTimer gameTimer;
 
     private JPanel buttonsPanel;
+    private final JPanel boardWrapperPanel;
     private final JLabel mineLabel;
 
     private boolean firstClick = true;
@@ -66,9 +65,10 @@ public class Game extends JFrame {
         this.rows = rows;
         this.columns = columns;
         this.mineAmount = mineAmount;
+        this.highScoreEntryAmount = 10;
+        this.scale = 20;
         this.practice = practice;
         this.difficulty = difficulty;
-        this.highScoreEntryAmount = 10;
         this.board = new Board(rows, columns, mineAmount);
         this.buttons = new JButton[rows][columns];
 
@@ -76,12 +76,11 @@ public class Game extends JFrame {
 
         // Window setup
         setTitle("Minesweeper");
-        int windowScale = 50;
-        setSize(columns * windowScale, rows * windowScale + 80);
+        setMinimumSize(new Dimension(columns * scale + 350, rows * scale + 300));
+        setSize(new Dimension(columns * scale + 350, rows * scale + 300));
+        pack();
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLayout(new BorderLayout());
-
-        // Apply Dark Background to Frame
         getContentPane().setBackground(BG_DARK);
 
         // Menu bar
@@ -113,17 +112,16 @@ public class Game extends JFrame {
                 newGame();
             }
         });
-        // -------------------------------------------
 
         // Mine counter (left)
         mineLabel = new JLabel("Mines: " + mineAmount);
-        mineLabel.setFont(new Font("Segoe UI", Font.BOLD, 20));
+        mineLabel.setFont(new Font("Segoe UI", Font.BOLD, scale));
         mineLabel.setForeground(Color.WHITE);
         mineLabel.setHorizontalAlignment(SwingConstants.LEFT);
 
         // Game timer (right)
         JLabel timeLabel = new JLabel("Time: 0s");
-        timeLabel.setFont(new Font("Segoe UI", Font.BOLD, 20));
+        timeLabel.setFont(new Font("Segoe UI", Font.BOLD, scale));
         timeLabel.setForeground(Color.WHITE);
         this.gameTimer = new GameTimer(timeLabel);
 
@@ -131,18 +129,37 @@ public class Game extends JFrame {
         headerPanel.add(timeLabel, BorderLayout.EAST);
 
         add(headerPanel, BorderLayout.NORTH);
-        // -------------------------------------------
 
-        // Buttons panel
-        this.buttonsPanel = createButtonsPanel();
-        add(buttonsPanel, BorderLayout.CENTER);
+        // Buttons boardWrapper panel
+        boardWrapperPanel = new JPanel(new GridBagLayout());
+        boardWrapperPanel.setBackground(BG_DARK);
+
+        buttonsPanel = createButtonsPanel();
+        boardWrapperPanel.add(buttonsPanel);
+
+        boardWrapperPanel.addComponentListener(new ComponentAdapter() {
+            @Override
+            public void componentResized(ComponentEvent e) {
+                int w = boardWrapperPanel.getWidth();
+                int h = boardWrapperPanel.getHeight();
+
+                int cellSize = Math.min(w / columns, h / rows);
+
+                cellSize = Math.max(cellSize, scale);
+
+                Dimension squareSize = new Dimension(columns * cellSize, rows * cellSize);
+                buttonsPanel.setPreferredSize(squareSize);
+
+                boardWrapperPanel.revalidate();
+            }
+        });
+        add(boardWrapperPanel, BorderLayout.CENTER);
 
         setLocationRelativeTo(null);
-        setResizable(false);
+        setResizable(true);
         setVisible(true);
     }
 
-    // Create menu bar
     private JMenuBar createMenuBar() {
         JMenuBar menuBar = new JMenuBar();
         menuBar.setBackground(BG_DARK);
@@ -215,11 +232,8 @@ public class Game extends JFrame {
         return panel;
     }
 
-    // Helper method for styling buttons
     private void styleButton(JButton btn, boolean isRevealed) {
-        // Disable the hover "glow" effect
         btn.setRolloverEnabled(false);
-        // Force the custom Dark UI painter
         btn.setUI(DARK_BUTTON_UI);
 
         if (isRevealed) {
@@ -250,7 +264,6 @@ public class Game extends JFrame {
         };
     }
 
-    // Handling left click on buttons
     private void handleLeftClick(int x, int y) {
         if (firstClick) {
             this.board.initializeBoard(x, y, practice);
@@ -271,7 +284,6 @@ public class Game extends JFrame {
         }
     }
 
-    // Handling win state
     private void handleWin() {
         gameTimer.stop();
         revealAllMines(true);
@@ -288,6 +300,13 @@ public class Game extends JFrame {
                     "You win!\nTime: " + gameTimer.getTimeInSeconds() + "s\nEnter your name:"
             );
 
+            while (name != null && name.matches(".*:.*")) {
+                name = JOptionPane.showInputDialog(
+                        this,
+                        "Your name can't contain ':'\nTime: " + gameTimer.getTimeInSeconds() + "s\nEnter your name:"
+                );
+            }
+
             if (name != null && !name.trim().isEmpty()) {
                 highScoreManager.addScore(name, gameTimer.getTimeInSeconds());
                 showHighscores(highScoreEntryAmount);
@@ -297,7 +316,6 @@ public class Game extends JFrame {
         }
     }
 
-    // Handling game over state
     private void handleGameOver() {
         gameTimer.stop();
         revealAllMines(false);
@@ -318,28 +336,43 @@ public class Game extends JFrame {
         }
     }
 
-    // Resetting the game
-    private void resetGame() {
-        firstClick = true;
-        this.board = new Board(rows, columns, mineAmount);
-        this.gameTimer.reset();
-
-        mineLabel.setText("Mines: " + mineAmount);
-
-        remove(buttonsPanel);
-        buttonsPanel = createButtonsPanel();
-        add(buttonsPanel, BorderLayout.CENTER);
-
-        revalidate();
-        repaint();
-    }
-
     private void newGame() {
         this.dispose();
         new GameSetup();
     }
 
-    // Refreshing the game board
+    private void resetGame() {
+        firstClick = true;
+        this.board = new Board(rows, columns, mineAmount);
+        this.gameTimer.reset();
+        mineLabel.setText("Mines: " + mineAmount);
+
+        boardWrapperPanel.remove(buttonsPanel);
+        buttonsPanel = createButtonsPanel();
+        boardWrapperPanel.add(buttonsPanel);
+
+        refreshBoardLayout();
+
+        revalidate();
+        repaint();
+    }
+
+    private void refreshBoardLayout() {
+        if (boardWrapperPanel.getWidth() == 0 || boardWrapperPanel.getHeight() == 0) return;
+
+        int w = boardWrapperPanel.getWidth();
+        int h = boardWrapperPanel.getHeight();
+        int cellSize = Math.min(w / columns, h / rows);
+
+        cellSize = Math.max(cellSize, scale);
+
+        Dimension squareSize = new Dimension(columns * cellSize, rows * cellSize);
+        buttonsPanel.setPreferredSize(squareSize);
+
+        boardWrapperPanel.revalidate();
+        boardWrapperPanel.repaint();
+    }
+
     private void refreshView() {
         int flagsPlaced = 0;
 
@@ -349,7 +382,6 @@ public class Game extends JFrame {
                 String symbol = board.getFieldAt(i, j).getDisplaySymbol();
                 boolean isRevealed = board.getFieldAt(i, j).isRevealed();
 
-                // Set text & color
                 btn.setText(symbol);
                 btn.setForeground(getFieldColor(symbol));
 
@@ -358,16 +390,13 @@ public class Game extends JFrame {
                     styleButton(btn, false);
                 } else styleButton(btn, isRevealed);
 
-                // Disable buttons when everything around them is revealed or flagged
                 btn.setEnabled(board.isEnabled(i, j));
             }
         }
-        // Updating the mine count label
         int remaining = mineAmount - flagsPlaced;
         mineLabel.setText("Mines: " + remaining);
     }
 
-    // Reveal all mines on button label
     private void revealAllMines(boolean won) {
         for (int i = 0; i < rows; i++) {
             for (int j = 0; j < columns; j++) {
@@ -388,9 +417,7 @@ public class Game extends JFrame {
         }
     }
 
-    // Show highscore window
     private void showHighscores(int amount) {
-        // Preparing data for JTable
         List<Score> topScores = highScoreManager.getTopScores(amount);
         String[] columnNames = {"Rank", "Name", "Time (s)"};
         Object[][] data = new Object[amount][3];
@@ -407,11 +434,9 @@ public class Game extends JFrame {
             }
         }
 
-        // Creating the table
         JTable table = new JTable(data, columnNames);
         table.setEnabled(false);
 
-        // Dark table styling
         table.setBackground(BTN_REVEALED);
         table.setForeground(Color.WHITE);
         table.setGridColor(BORDER_COLOR);
@@ -419,7 +444,6 @@ public class Game extends JFrame {
         table.getTableHeader().setForeground(Color.WHITE);
         table.getTableHeader().setBorder(BorderFactory.createLineBorder(BORDER_COLOR));
 
-        // Center text renderer
         DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
         centerRenderer.setHorizontalAlignment(JLabel.CENTER);
         centerRenderer.setBackground(BTN_REVEALED);
@@ -429,7 +453,6 @@ public class Game extends JFrame {
         table.getColumnModel().getColumn(1).setCellRenderer(centerRenderer);
         table.getColumnModel().getColumn(2).setCellRenderer(centerRenderer);
 
-        // Scroll pane
         JScrollPane scrollPane = new JScrollPane(table);
         scrollPane.getViewport().setBackground(BG_DARK);
         scrollPane.setBorder(BorderFactory.createLineBorder(BORDER_COLOR));
@@ -463,7 +486,6 @@ public class Game extends JFrame {
 
         JButton okButton = new JButton("OK");
 
-        // Style the button to match game theme
         okButton.setFocusPainted(false);
         okButton.setBackground(BTN_HIDDEN);
         okButton.setForeground(Color.WHITE);
@@ -472,11 +494,11 @@ public class Game extends JFrame {
                 BorderFactory.createEmptyBorder(5, 15, 5, 15)
         ));
 
-        // Add hover effect
         okButton.addMouseListener(new java.awt.event.MouseAdapter() {
             public void mouseEntered(java.awt.event.MouseEvent evt) {
                 okButton.setBackground(new Color(80, 80, 80));
             }
+
             public void mouseExited(java.awt.event.MouseEvent evt) {
                 okButton.setBackground(BTN_HIDDEN);
             }
@@ -485,7 +507,6 @@ public class Game extends JFrame {
         okButton.addActionListener(e -> dialog.dispose());
         buttonPanel.add(okButton);
 
-        // Assemble and show
         dialog.add(contentPanel, BorderLayout.CENTER);
         dialog.add(buttonPanel, BorderLayout.SOUTH);
 

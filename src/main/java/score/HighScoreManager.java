@@ -13,12 +13,10 @@ public class HighScoreManager {
 
     private static final String DEFAULT_FILE = "minesweeper_scores.txt";
 
-    // Default Constructor: Used in Game
     public HighScoreManager(Difficulty difficulty, int maxEntries) {
         this(difficulty, maxEntries, DEFAULT_FILE);
     }
 
-    // Constructor: Used in testing with Custom File
     public HighScoreManager(Difficulty difficulty, int maxEntries, String fileName) {
         this.difficulty = difficulty;
         this.maxEntries = maxEntries;
@@ -31,7 +29,6 @@ public class HighScoreManager {
     public void addScore(String playerName, int timeInSeconds) {
         scores.add(new Score(playerName, timeInSeconds));
 
-        // Sorting and trimming strictly to maxEntries
         scores.sort(Comparator.comparingInt(Score::getTimeInSeconds));
         if (scores.size() > maxEntries) {
             scores.subList(maxEntries, scores.size()).clear();
@@ -46,7 +43,6 @@ public class HighScoreManager {
                 .collect(Collectors.toCollection(ArrayList::new));
     }
 
-    // Saving scores to file
     private void saveToFile() {
         List<String> linesToWrite = new ArrayList<>();
         File file = new File(fileName);
@@ -56,7 +52,6 @@ public class HighScoreManager {
             try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
                 String line;
                 while ((line = reader.readLine()) != null) {
-                    // If the line DOES NOT start with "CURRENT_DIFFICULTY:", keep it.
                     if (!line.startsWith(difficulty.name() + ":")) {
                         linesToWrite.add(line);
                     }
@@ -66,12 +61,10 @@ public class HighScoreManager {
             }
         }
 
-        // Adding current scores (Already sorted and trimmed by addScore)
         for (Score s : scores) {
             linesToWrite.add(difficulty.name() + ":" + s.getPlayerName() + ":" + s.getTimeInSeconds());
         }
 
-        // Writing completely fresh file content
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(file))) {
             for (String line : linesToWrite) {
                 writer.write(line);
@@ -93,7 +86,6 @@ public class HighScoreManager {
             while ((line = reader.readLine()) != null) {
                 String[] parts = line.split(":");
 
-                // Checking if line matches "DIFFICULTY:Name:Time"
                 if (parts.length == 3 && parts[0].equals(difficulty.name())) {
 
                     // Stop loading if file somehow has too many entries
