@@ -1,4 +1,6 @@
 HARD:Uranx:346
+MEDIUM:Uranx:156
+MEDIUM:Uranx:169
 EASY:Uranx:9
 EASY:Hesia:11
 EASY:Uranx:12
@@ -9,5 +11,3 @@ EASY:Andżelika:37
 EASY:mice:57
 EASY:Julia:96
 EASY:Rakso:183
-MEDIUM:Uranx:156
-MEDIUM:Uranx:169
